@@ -9,6 +9,8 @@ export interface User {
   department?: string;
   position?: string;
   avatar?: string;
+  isNew?: boolean; // Flag to identify new users
+  hasAccess?: boolean; // Flag to determine if user has been granted access
 }
 
 export type StressLevel = 'low' | 'medium' | 'high' | 'severe';
