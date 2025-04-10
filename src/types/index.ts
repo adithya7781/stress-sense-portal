@@ -51,3 +51,27 @@ export const stressLevelBgLightMap = {
   high: 'bg-red-100',
   severe: 'bg-red-200'
 };
+
+// Add progress indicator colors for stress levels
+export const stressLevelProgressMap = {
+  low: 'bg-green-500',
+  medium: 'bg-yellow-500',
+  high: 'bg-red-500',
+  severe: 'bg-red-700'
+};
+
+// Add readable text labels for stress levels
+export const stressLevelTextMap = {
+  low: 'Normal',
+  medium: 'Moderate',
+  high: 'High',
+  severe: 'Severe'
+};
+
+// Add descriptive messages for each stress level
+export const stressLevelMessageMap = {
+  low: 'Your stress levels are normal. Keep up the good work!',
+  medium: 'Your stress levels are moderate. Consider taking short breaks.',
+  high: 'Your stress levels are high. We recommend taking time to relax and practice stress management techniques.',
+  severe: 'Your stress levels are severe. Please consider talking to a professional and take immediate steps to reduce stress.'
+};
