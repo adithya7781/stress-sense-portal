@@ -89,8 +89,12 @@ const Login = () => {
         });
       }
       
-      navigate("/dashboard");
+      // Make sure to clear loading state before navigation
       setIsLoading(false);
+      
+      // Force navigation to dashboard after successful login
+      console.log("Navigating to dashboard");
+      navigate("/dashboard", { replace: true });
     }, 1000);
   };
 
@@ -260,3 +264,4 @@ const Login = () => {
 };
 
 export default Login;
+
