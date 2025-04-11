@@ -49,8 +49,12 @@ const Login = () => {
     setErrorMessage(null);
     
     try {
-      // Call the real API
+      console.log("Attempting login with:", values);
+      
+      // Call the login API
       const response = await authApi.login(values.email, values.password, values.userType);
+      console.log("Login response received:", response);
+      
       const { token, user } = response.data;
       
       // Store token based on remember me setting
@@ -68,27 +72,29 @@ const Login = () => {
         description: "You have successfully logged in."
       });
       
-      // If user is admin and there are new users awaiting approval, show notification
-      if (user.type === "admin" && user.isNew) {
-        hookToast({
-          title: "New User Notification",
-          description: "There are new users awaiting access approval.",
-        });
+      // Navigate based on user type
+      if (user.type === "admin") {
+        // If user is admin and there are new users awaiting approval, show notification
+        if (user.isNew) {
+          hookToast({
+            title: "New User Notification",
+            description: "There are new users awaiting access approval.",
+          });
+        }
+        navigate("/admin-dashboard", { replace: true });
+      } else {
+        // If user doesn't have access yet, show warning
+        if (!user.hasAccess) {
+          hookToast({
+            title: "Access Pending",
+            description: "Your account is awaiting approval from an administrator.",
+            variant: "destructive",
+          });
+        }
+        navigate("/dashboard", { replace: true });
       }
       
-      // If user doesn't have access yet, show warning
-      if (!user.hasAccess && user.type === "it_professional") {
-        hookToast({
-          title: "Access Pending",
-          description: "Your account is awaiting approval from an administrator.",
-          variant: "destructive",
-        });
-      }
-      
-      // Navigate to dashboard
       setIsLoading(false);
-      navigate("/dashboard", { replace: true });
-      
     } catch (error: any) {
       setIsLoading(false);
       const message = error.response?.data?.message || "Failed to login. Please try again.";
