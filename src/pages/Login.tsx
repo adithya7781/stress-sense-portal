@@ -15,6 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { authApi } from "@/services/api";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -31,6 +32,7 @@ const Login = () => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -42,38 +44,32 @@ const Login = () => {
     },
   });
 
-  // Mock login function - in a real app, this would call an API
-  const handleLogin = (values: LoginFormValues) => {
+  const handleLogin = async (values: LoginFormValues) => {
     setIsLoading(true);
+    setErrorMessage(null);
     
-    // Simulate API call
-    setTimeout(() => {
-      // Email format validation already handled by zod
-
-      // Mock successful login
-      // In a real app, this would validate credentials against a backend
-      const mockUser = {
-        id: "user-1",
-        name: values.userType === "admin" ? "Admin User" : "IT Professional",
-        email: values.email,
-        type: values.userType,
-        isNew: Math.random() > 0.5, // Randomly decide if user is new for demo purposes
-        hasAccess: values.userType === "admin" ? true : Math.random() > 0.3, // Admins always have access, others might need approval
-      };
-
-      // Store user in localStorage or sessionStorage
+    try {
+      // Call the real API
+      const response = await authApi.login(values.email, values.password, values.userType);
+      const { token, user } = response.data;
+      
+      // Store token based on remember me setting
       if (values.rememberMe) {
-        localStorage.setItem("stressSenseUser", JSON.stringify(mockUser));
+        localStorage.setItem('stressSenseToken', token);
       } else {
-        sessionStorage.setItem("stressSenseUser", JSON.stringify(mockUser));
+        sessionStorage.setItem('stressSenseToken', token);
       }
       
-      toast.success(`Welcome back, ${mockUser.name}!`, {
+      // Store user data
+      const storage = values.rememberMe ? localStorage : sessionStorage;
+      storage.setItem('stressSenseUser', JSON.stringify(user));
+      
+      toast.success(`Welcome back, ${user.name}!`, {
         description: "You have successfully logged in."
       });
       
-      // If new user, show additional notification for admins
-      if (mockUser.type === "admin" && mockUser.isNew) {
+      // If user is admin and there are new users awaiting approval, show notification
+      if (user.type === "admin" && user.isNew) {
         hookToast({
           title: "New User Notification",
           description: "There are new users awaiting access approval.",
@@ -81,7 +77,7 @@ const Login = () => {
       }
       
       // If user doesn't have access yet, show warning
-      if (!mockUser.hasAccess && mockUser.type === "it_professional") {
+      if (!user.hasAccess && user.type === "it_professional") {
         hookToast({
           title: "Access Pending",
           description: "Your account is awaiting approval from an administrator.",
@@ -89,13 +85,19 @@ const Login = () => {
         });
       }
       
-      // Make sure to clear loading state before navigation
+      // Navigate to dashboard
       setIsLoading(false);
-      
-      // Force navigation to dashboard after successful login
-      console.log("Navigating to dashboard");
       navigate("/dashboard", { replace: true });
-    }, 1000);
+      
+    } catch (error: any) {
+      setIsLoading(false);
+      const message = error.response?.data?.message || "Failed to login. Please try again.";
+      setErrorMessage(message);
+      
+      toast.error("Login Failed", {
+        description: message
+      });
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -264,4 +266,3 @@ const Login = () => {
 };
 
 export default Login;
-

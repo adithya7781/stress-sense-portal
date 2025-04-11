@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -8,12 +7,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { BrainCog, ArrowLeft, Eye, EyeOff, Lock, AlertCircle, CheckCircle2 } from "lucide-react";
+import { BrainCog, ArrowLeft, Eye, EyeOff, Lock, AlertCircle } from "lucide-react";
 import { UserType } from "@/types";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { authApi } from "@/services/api";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -45,6 +45,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [companyDomain, setCompanyDomain] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -59,43 +60,48 @@ const Register = () => {
     },
   });
 
-  // Mock registration function - in a real app, this would call an API
-  const handleRegister = (values: RegisterFormValues) => {
+  const handleRegister = async (values: RegisterFormValues) => {
     setIsLoading(true);
+    setErrorMessage(null);
     
-    // Simulate API call
-    setTimeout(() => {
-      try {
-        // Mock API call to register user
-        toast.success("Account created successfully", {
-          description: "You can now login with your credentials."
-        });
+    try {
+      await authApi.register({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        type: values.userType,
+        department: values.department || undefined,
+        position: values.position || undefined
+      });
+      
+      toast.success("Account created successfully", {
+        description: "You can now login with your credentials."
+      });
 
-        // If admin user, show additional notification
-        if (values.userType === "admin") {
-          hookToast({
-            title: "Admin Account Created",
-            description: "You have administrator privileges for managing users and access.",
-          });
-        } else {
-          // Notify that HR admin review is pending
-          hookToast({
-            title: "Account Pending Approval",
-            description: "Your account will be reviewed by an admin before full access is granted.",
-          });
-        }
-        
-        navigate("/login");
-      } catch (error) {
+      if (values.userType === "admin") {
         hookToast({
-          title: "Registration Failed",
-          description: "There was an error creating your account. Please try again.",
-          variant: "destructive",
+          title: "Admin Account Created",
+          description: "You have administrator privileges for managing users and access.",
         });
-      } finally {
-        setIsLoading(false);
+      } else {
+        hookToast({
+          title: "Account Pending Approval",
+          description: "Your account will be reviewed by an admin before full access is granted.",
+        });
       }
-    }, 1500);
+      
+      navigate("/login");
+    } catch (error: any) {
+      setIsLoading(false);
+      const message = error.response?.data?.message || "Failed to create account. Please try again.";
+      setErrorMessage(message);
+      
+      hookToast({
+        title: "Registration Failed",
+        description: message,
+        variant: "destructive",
+      });
+    }
   };
 
   const togglePasswordVisibility = () => {
