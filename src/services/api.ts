@@ -33,15 +33,72 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Mock users for local testing
+const mockUsers = [
+  {
+    id: '1',
+    name: 'Admin User',
+    email: 'admin@example.com',
+    password: 'password123',
+    type: 'admin',
+    department: 'Human Resources',
+    position: 'HR Manager',
+    avatar_url: null
+  },
+  {
+    id: '2',
+    name: 'IT Professional',
+    email: 'it@example.com',
+    password: 'password123',
+    type: 'it_professional',
+    department: 'Information Technology',
+    position: 'Software Engineer',
+    avatar_url: null
+  }
+];
+
 // Authentication API calls
 export const authApi = {
   login: async (email: string, password: string, userType: string) => {
-    const response = await apiClient.post('/login', { 
-      email, 
-      password, 
-      type: userType 
-    });
-    return response;
+    // Mock login functionality instead of API call
+    try {
+      console.log('Login attempt with:', { email, password, userType });
+      
+      // Find the user in our mock database
+      const user = mockUsers.find(u => u.email === email && u.password === password && u.type === userType);
+      
+      if (!user) {
+        // Simulate API error response format
+        const error = new Error('Invalid credentials');
+        (error as any).response = {
+          data: { message: 'Invalid email or password' },
+          status: 401
+        };
+        throw error;
+      }
+      
+      // Create a mock token (in a real app this would be a JWT)
+      const token = `mock-token-${user.id}-${Date.now()}`;
+      
+      // Return in the format expected by the login handler
+      return {
+        data: {
+          token,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            type: user.type,
+            department: user.department,
+            position: user.position,
+            avatar: user.avatar_url
+          }
+        }
+      };
+    } catch (error) {
+      console.error('Mock login error:', error);
+      throw error;
+    }
   },
   
   register: async (userData: {
@@ -52,8 +109,47 @@ export const authApi = {
     department?: string;
     position?: string;
   }) => {
-    const response = await apiClient.post('/register', userData);
-    return response;
+    // Mock register functionality
+    try {
+      console.log('Register attempt with:', userData);
+      
+      // Check if user already exists
+      if (mockUsers.some(u => u.email === userData.email)) {
+        // Simulate API error response format
+        const error = new Error('User already exists');
+        (error as any).response = {
+          data: { message: 'Email already in use' },
+          status: 409
+        };
+        throw error;
+      }
+      
+      // Create a new mock user
+      const newUser = {
+        id: `${mockUsers.length + 1}`,
+        name: userData.name,
+        email: userData.email,
+        password: userData.password,
+        type: userData.type,
+        department: userData.department || null,
+        position: userData.position || null,
+        avatar_url: null
+      };
+      
+      // Add to our mock database
+      mockUsers.push(newUser);
+      
+      // Return success response
+      return {
+        data: {
+          message: 'User registered successfully',
+          user_id: newUser.id
+        }
+      };
+    } catch (error) {
+      console.error('Mock register error:', error);
+      throw error;
+    }
   }
 };
 
@@ -65,74 +161,79 @@ export const userApi = {
     video_upload_access?: boolean;
     realtime_monitoring?: boolean;
   }) => {
-    return await apiClient.post('/access/update', { 
-      user_id: userId,
-      ...accessSettings
-    });
+    // Mock implementation
+    console.log('Updating access for user', userId, accessSettings);
+    return { data: { message: 'Access settings updated successfully' } };
   },
   
   getUsers: async () => {
-    return await apiClient.get('/users');
+    // Return mock users without passwords
+    return { 
+      data: mockUsers.map(({ password, ...user }) => user) 
+    };
   }
 };
 
 // Stress detection API calls
 export const stressApi = {
   detectStress: async (imageData: string | File, source: string, notes?: string) => {
-    const formData = new FormData();
-    formData.append('source', source);
+    // Mock stress detection
+    console.log('Stress detection called with source:', source);
     
-    if (typeof imageData === 'string') {
-      formData.append('image_data', imageData);
-    } else {
-      formData.append('file', imageData);
-    }
+    // Simulate random stress level
+    const levels = ['low', 'medium', 'high', 'severe'];
+    const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+    const randomScore = Math.floor(Math.random() * 100);
     
-    if (notes) {
-      formData.append('notes', notes);
-    }
-    
-    return await apiClient.post('/stress/detect', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    return {
+      data: {
+        record_id: `mock-record-${Date.now()}`,
+        result: {
+          stress_level: randomLevel,
+          stress_score: randomScore,
+          confidence: 0.85
+        }
+      }
+    };
   },
   
   getHistory: async (userId?: string, limit?: number) => {
-    let url = '/stress/history';
-    const params = new URLSearchParams();
+    // Mock stress history
+    console.log('Getting stress history for user:', userId, 'limit:', limit);
     
-    if (userId) {
-      params.append('user_id', userId);
+    const mockHistory = [];
+    const count = limit || 5;
+    const levels = ['low', 'medium', 'high', 'severe'];
+    
+    for (let i = 0; i < count; i++) {
+      mockHistory.push({
+        id: `history-${i}`,
+        user_id: userId || '1',
+        level: levels[Math.floor(Math.random() * levels.length)],
+        score: Math.floor(Math.random() * 100),
+        timestamp: new Date(Date.now() - i * 86400000).toISOString(),
+        source: i % 2 === 0 ? 'image' : 'realtime',
+        notes: i % 3 === 0 ? 'Some notes about this reading' : null
+      });
     }
     
-    if (limit) {
-      params.append('limit', limit.toString());
-    }
-    
-    if (params.toString()) {
-      url += `?${params.toString()}`;
-    }
-    
-    return await apiClient.get(url);
+    return { data: mockHistory };
   },
   
   getTrend: async (userId?: string, days: number = 7) => {
-    let url = '/stress/trend';
-    const params = new URLSearchParams();
+    // Mock trend data
+    console.log('Getting trend data for user:', userId, 'days:', days);
     
-    if (userId) {
-      params.append('user_id', userId);
+    const mockTrend = [];
+    for (let i = 0; i < days; i++) {
+      mockTrend.push({
+        date: new Date(Date.now() - i * 86400000).toISOString().split('T')[0],
+        avg_score: 40 + Math.floor(Math.random() * 40),
+        max_score: 60 + Math.floor(Math.random() * 40)
+      });
     }
     
-    params.append('days', days.toString());
-    
-    if (params.toString()) {
-      url += `?${params.toString()}`;
-    }
-    
-    return await apiClient.get(url);
+    return { data: mockTrend };
   }
 };
 
