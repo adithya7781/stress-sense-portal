@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User } from "@/types";
+import { User, UserType } from "@/types";
 import { userApi } from "@/services/api";
 import UserAccessManagement from "@/components/UserAccessManagement";
 import UserTypeGuard from "@/components/UserTypeGuard";
@@ -50,12 +49,18 @@ const AdminDashboard = () => {
     setIsLoading(true);
     try {
       const response = await userApi.getUsers();
-      setUsers(response.data);
-      setFilteredUsers(response.data);
+      // Ensure the response data matches our User type
+      const typedUsers = response.data.map((user: any) => ({
+        ...user,
+        type: user.type as UserType,
+      }));
+      
+      setUsers(typedUsers);
+      setFilteredUsers(typedUsers);
       
       // If we have users and none is selected, select the first one
-      if (response.data.length && !selectedUser) {
-        setSelectedUser(response.data[0]);
+      if (typedUsers.length && !selectedUser) {
+        setSelectedUser(typedUsers[0]);
       }
     } catch (error) {
       console.error("Failed to fetch users:", error);

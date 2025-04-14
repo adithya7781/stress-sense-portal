@@ -1,5 +1,6 @@
 
 import axios from 'axios';
+import { UserType } from '@/types';
 
 // Base API configuration
 const API_URL = 'https://3476a56b-ec7f-4eb6-8bef-435af9930e0d.lovableproject.com/api';
@@ -33,14 +34,14 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Mock users for local testing
+// Mock users for local testing - using proper UserType values
 const mockUsers = [
   {
     id: '1',
     name: 'Admin User',
     email: 'admin@example.com',
     password: 'password123',
-    type: 'admin',
+    type: 'admin' as UserType,
     department: 'Human Resources',
     position: 'HR Manager',
     avatar_url: null
@@ -50,7 +51,7 @@ const mockUsers = [
     name: 'IT Professional',
     email: 'it@example.com',
     password: 'password123',
-    type: 'it_professional',
+    type: 'it_professional' as UserType,
     department: 'Information Technology',
     position: 'Software Engineer',
     avatar_url: null
@@ -124,13 +125,13 @@ export const authApi = {
         throw error;
       }
       
-      // Create a new mock user
+      // Create a new mock user with proper typing
       const newUser = {
         id: `${mockUsers.length + 1}`,
         name: userData.name,
         email: userData.email,
         password: userData.password,
-        type: userData.type,
+        type: userData.type as UserType,
         department: userData.department || null,
         position: userData.position || null,
         avatar_url: null
@@ -167,9 +168,16 @@ export const userApi = {
   },
   
   getUsers: async () => {
-    // Return mock users without passwords
+    // Return mock users without passwords but with proper typing
     return { 
-      data: mockUsers.map(({ password, ...user }) => user) 
+      data: mockUsers.map(({ password, ...user }) => ({
+        ...user,
+        // Ensure avatar is properly mapped from avatar_url
+        avatar: user.avatar_url,
+        // Add these properties used in the admin dashboard
+        isNew: Math.random() > 0.7, // Random for demo purposes
+        hasAccess: user.type === 'admin' ? true : Math.random() > 0.5 // Admins always have access
+      }))
     };
   }
 };

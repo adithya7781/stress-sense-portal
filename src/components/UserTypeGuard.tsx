@@ -18,12 +18,12 @@ const UserTypeGuard = ({ children, user, allowedTypes }: UserTypeGuardProps) => 
       return;
     }
 
-    if (!allowedTypes.includes(user.type)) {
+    if (!allowedTypes.includes(user.type as UserType)) {
       navigate("/dashboard", { replace: true });
     }
   }, [user, allowedTypes, navigate]);
 
-  if (!user || !allowedTypes.includes(user.type)) {
+  if (!user || !allowedTypes.includes(user.type as UserType)) {
     return null;
   }
 
