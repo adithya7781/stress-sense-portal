@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -44,7 +45,6 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [companyDomain, setCompanyDomain] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const form = useForm<RegisterFormValues>({
@@ -101,6 +101,8 @@ const Register = () => {
         description: message,
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -138,6 +140,13 @@ const Register = () => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleRegister)}>
               <CardContent className="space-y-4">
+                {errorMessage && (
+                  <div className="bg-destructive/15 p-3 rounded-md border border-destructive flex items-start space-x-2">
+                    <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
+                    <span className="text-sm text-destructive">{errorMessage}</span>
+                  </div>
+                )}
+                
                 <FormField
                   control={form.control}
                   name="name"
@@ -162,12 +171,7 @@ const Register = () => {
                         <Input 
                           type="email" 
                           placeholder="you@example.com" 
-                          {...field} 
-                          onChange={(e) => {
-                            field.onChange(e);
-                            const domain = e.target.value.split('@')[1] || '';
-                            setCompanyDomain(domain);
-                          }}
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />

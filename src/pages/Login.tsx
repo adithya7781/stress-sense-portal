@@ -74,23 +74,8 @@ const Login = () => {
       
       // Navigate based on user type
       if (user.type === "admin") {
-        // If user is admin and there are new users awaiting approval, show notification
-        if (user.isNew) {
-          hookToast({
-            title: "New User Notification",
-            description: "There are new users awaiting access approval.",
-          });
-        }
         navigate("/admin-dashboard", { replace: true });
       } else {
-        // If user doesn't have access yet, show warning
-        if (!user.hasAccess) {
-          hookToast({
-            title: "Access Pending",
-            description: "Your account is awaiting approval from an administrator.",
-            variant: "destructive",
-          });
-        }
         navigate("/dashboard", { replace: true });
       }
       
@@ -136,6 +121,13 @@ const Login = () => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleLogin)}>
               <CardContent className="space-y-4">
+                {errorMessage && (
+                  <div className="bg-destructive/15 p-3 rounded-md border border-destructive flex items-start space-x-2">
+                    <AlertTriangle className="h-4 w-4 text-destructive mt-0.5" />
+                    <span className="text-sm text-destructive">{errorMessage}</span>
+                  </div>
+                )}
+                
                 <FormField
                   control={form.control}
                   name="userType"
