@@ -3,7 +3,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Card, CardHeader } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
-import { Form } from "@/components/ui/form";
 import LoginFormHeader from "@/components/auth/LoginFormHeader";
 import LoginForm from "@/components/auth/LoginForm";
 
@@ -21,11 +20,7 @@ const Login = () => {
             <LoginFormHeader />
           </CardHeader>
           
-          <Form>
-            <form>
-              <LoginForm />
-            </form>
-          </Form>
+          <LoginForm />
         </Card>
       </div>
     </div>

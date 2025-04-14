@@ -1,16 +1,17 @@
 
 import React, { useState } from "react";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
 
 interface PasswordInputProps {
   form: UseFormReturn<any>;
-  forgotPasswordLink?: boolean;
+  name?: string;
+  label?: string;
 }
 
-const PasswordInput = ({ form, forgotPasswordLink = true }: PasswordInputProps) => {
+const PasswordInput = ({ form, name = "password", label = "Password" }: PasswordInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = () => {
@@ -20,24 +21,16 @@ const PasswordInput = ({ form, forgotPasswordLink = true }: PasswordInputProps) 
   return (
     <FormField
       control={form.control}
-      name="password"
+      name={name}
       render={({ field }) => (
         <FormItem>
-          <div className="flex items-center justify-between">
-            <FormLabel>Password</FormLabel>
-            {forgotPasswordLink && (
-              <a href="#" className="text-xs text-primary hover:underline">
-                Forgot password?
-              </a>
-            )}
-          </div>
+          <FormLabel>{label}</FormLabel>
           <div className="relative">
             <FormControl>
               <Input 
                 type={showPassword ? "text" : "password"} 
-                autoComplete="current-password"
-                className="pr-10"
                 {...field}
+                className="pr-10"
               />
             </FormControl>
             <button 
@@ -52,6 +45,11 @@ const PasswordInput = ({ form, forgotPasswordLink = true }: PasswordInputProps) 
               }
             </button>
           </div>
+          {name === "password" && (
+            <div className="text-xs text-muted-foreground mt-1">
+              Password must be at least 8 characters and include letters, numbers, and special characters.
+            </div>
+          )}
           <FormMessage />
         </FormItem>
       )}
