@@ -6,9 +6,7 @@ import { toast } from "sonner";
 import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Lock } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -17,49 +15,20 @@ import ErrorAlert from "./ErrorAlert";
 import PasswordInput from "./PasswordInput";
 import RegisterFormFooter from "./RegisterFormFooter";
 import { UserType } from "@/types";
+import UserTypeSelector from "./UserTypeSelector";
+import { RegisterFormValues } from "@/pages/Register";
 
-const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number")
-    .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
-  confirmPassword: z.string(),
-  userType: z.enum(["it_professional", "admin"]),
-  department: z.string().optional(),
-  position: z.string().optional(),
-})
-.refine(data => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+interface RegisterFormProps {
+  form: UseFormReturn<RegisterFormValues>;
+}
 
-export type RegisterFormValues = z.infer<typeof registerSchema>;
-
-const RegisterForm = () => {
+const RegisterForm = ({ form }: RegisterFormProps) => {
   const navigate = useNavigate();
   const { toast: hookToast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const form = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      userType: "it_professional",
-      department: "",
-      position: "",
-    },
-  });
 
   const handleRegister = async (values: RegisterFormValues) => {
     setIsLoading(true);
@@ -110,6 +79,8 @@ const RegisterForm = () => {
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
+
+  form.handleSubmit(handleRegister);
 
   return (
     <>
@@ -167,32 +138,7 @@ const RegisterForm = () => {
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="userType"
-          render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel>User Type</FormLabel>
-              <FormControl>
-                <RadioGroup 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                  className="flex space-x-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="it_professional" id="it_professional" />
-                    <Label htmlFor="it_professional">IT Professional</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="admin" id="admin" />
-                    <Label htmlFor="admin">Admin (HR)</Label>
-                  </div>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <UserTypeSelector form={form} />
         
         {form.watch("userType") === "it_professional" && (
           <>
